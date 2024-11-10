@@ -1,19 +1,50 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const { validateData } = require("./utils/validateData");
+const bcrypt = require("bcrypt");
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
   try {
+    validateData(req.body);
+    const { emailId, firstName, lastName, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({
+      emailId,
+      firstName,
+      lastName,
+      password: hashedPassword,
+    });
     await user.save();
     res.send("User is added successfully");
   } catch (error) {
     console.log(error);
-    res.send("Error while creating a user");
+    res.send("Error while creating a user : " + error.message);
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
+      res.send("Invalid credentils");
+      return;
+    }
+    const isPasswordValid = await bcrypt.compare(password, user?.password);
+    if (isPasswordValid) {
+      res.cookie("token", "fnrihgkjebjrlkmfjekcncfkjenfjkcr nj n");
+      res.send("Login is successfull");
+    } else {
+      throw new Error("Invalid credentials");
+    }
+  } catch (error) {
+    console.log(error);
+    res.send("Error while creating a user : " + error.message);
   }
 });
 
