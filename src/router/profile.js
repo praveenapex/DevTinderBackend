@@ -41,7 +41,7 @@ profileRouter.patch("/updateUser/:userId", async (req, res) => {
   }
 });
 
-profileRouter.get("/profile", userAuth, async (req, res) => {
+profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
     return res.status(200).send({
       user: req.user,
