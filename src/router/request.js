@@ -4,11 +4,12 @@ const { userAuth } = require("../middlewares/auth");
 const ConnectionRequestModel = require("../models/connectionRequest");
 const requestRouter = express.Router();
 
-requestRouter.get("/feed", async (req, res) => {
+requestRouter.get("/feed", userAuth, async (req, res) => {
   try {
-    const user = await User.find();
-    if (user.length !== 0) {
-      res.send(user);
+    const user = req.user;
+    const users = await User.find({ _id: { $ne: user?._id } });
+    if (users.length !== 0) {
+      res.send(users);
     } else {
       res.status(404).send("Users not found");
     }

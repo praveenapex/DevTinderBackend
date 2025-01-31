@@ -35,8 +35,17 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
         { toUserId: loggedInUser._id, status: "accepted" },
         { fromUserId: loggedInUser._id, status: "accepted" },
       ],
-    }).populate("fromUserId", "");
-    const connectionsData = connections.map((item) => item.fromUserId);
+    })
+      .populate("fromUserId", "")
+      .populate("toUserId", "");
+
+    console.log(connections);
+    const connectionsData = connections.map((row) => {
+      if (row.fromUserId._id.toString() === loggedInUser._id.toString()) {
+        return row.toUserId;
+      }
+      return row.fromUserId;
+    });
     return res.status(200).json({
       status: true,
       connections: connectionsData,
@@ -53,8 +62,8 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 userRouter.get("/user/feed", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
-    const page = parseInt(req.query.page);
-    let limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
     limit = limit > 50 ? 50 : limit;
     const skip = (page - 1) * limit;
     const connections = await ConnectionRequestModel.find({
@@ -66,12 +75,11 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
       usersToHide.add(item.fromUserId.toString());
       usersToHide.add(item.toUserId.toString());
     });
-    console.log(usersToHide);
 
     const feedUsers = await User.find({
       $and: [{ _id: { $nin: Array.from(usersToHide) } }],
     })
-      .select("firstName lastName skills emailId about photoUrl")
+      .select("firstName lastName skills emailId about photo")
       .skip(skip)
       .limit(limit);
     return res.status(200).json({

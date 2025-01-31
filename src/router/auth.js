@@ -39,7 +39,7 @@ authRouter.post("/login", async (req, res) => {
         expiresIn: "1d",
       });
       res.cookie("token", token);
-      res.send("Login is successfull");
+      res.send(user);
     } else {
       throw new Error("Invalid credentials");
     }
@@ -47,6 +47,12 @@ authRouter.post("/login", async (req, res) => {
     console.log(error);
     res.send("Error while creating a user : " + error.message);
   }
+});
+authRouter.post("/logout", async (req, res) => {
+  res.cookie("token", null, {
+    expires: new Date(Date.now()),
+  });
+  res.send("Logout Successful!!");
 });
 
 module.exports = {

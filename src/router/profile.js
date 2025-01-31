@@ -13,28 +13,14 @@ profileRouter.delete("/deleteUser", async (req, res) => {
   }
 });
 
-profileRouter.patch("/updateUser/:userId", async (req, res) => {
+profileRouter.put("/updateUser/:userId", userAuth, async (req, res) => {
   try {
-    const ALLOWED_UPDATES = [
-      "firstName",
-      "lastName",
-      "password",
-      "age",
-      "gender",
-      "about",
-      "skills",
-      "photoUrl",
-    ];
-    const isValidated = Object.keys(req.body).every((k) =>
-      ALLOWED_UPDATES.includes(k)
-    );
-    if (!isValidated) {
-      throw new Error("Cannot update the fields");
-    }
-    const user = await User.findByIdAndUpdate(req.params.userId, req.body, {
-      runValidators: true,
-    });
-    res.send("User data is updated successfully");
+    const loggedInUser = req.user;
+
+    Object.keys(req.body).forEach((key) => (loggedInUser[key] = req.body[key]));
+
+    await loggedInUser.save();
+    res.send(loggedInUser);
   } catch (error) {
     console.log(error);
     res.send("Cannot update the fields" + error.message);
